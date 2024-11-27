@@ -6,8 +6,8 @@ from customers_suppliers.models import CustomUser, Customer, Supplier
 
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'email', 'is_customer', 'is_supplier']
-    list_filter = ['id', 'email']
+    list_display = ['id', 'email', 'user_type']
+    list_filter = ['id', 'email', 'user_type']
     
     
 @admin.register(Customer)
@@ -18,7 +18,7 @@ class CustomerAdmin(admin.ModelAdmin):
   
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'contact_person']
-    list_filter = ['id'] 
+    list_display = ['id','name_organization', 'user', 'contact_person', 'supplier_type', 'inn']
+    list_filter = ['id', 'name_organization'] 
 
 
