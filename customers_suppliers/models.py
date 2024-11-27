@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, User
 from django.db import models
+from .validators import CustomValidators
 
 
 USER_TYPE_CHOICES = [
@@ -25,7 +26,8 @@ class CustomUser (AbstractUser ):
 
 class Customer(models.Model):
     user = models.OneToOneField(CustomUser , related_name='customer', on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True,
+                                    validators=[CustomValidators.validate_phone])
 
     def __str__(self):
         return f"{self.user.username} (Клиент)"
@@ -35,11 +37,15 @@ class Supplier(models.Model):
     user = models.OneToOneField(CustomUser , related_name='supplier', on_delete=models.CASCADE)
     contact_person = models.CharField(max_length=50, blank=True, null=True)
     supplier_type = models.CharField(max_length=10, choices=SUPPLIER_TYPE_CHOICES, default=None)
-    inn = models.CharField(max_length=12, blank=False, null=False)    
+    inn = models.CharField(max_length=12, blank=False, null=False, validators=[CustomValidators.vadate_inn])    
     kpp = models.CharField(max_length=12, blank=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     name_organization = models.CharField(max_length=250, blank=True, null=True)
-
+    
+    def clean(self):
+        super().clean()
+        CustomValidators.validate_kpp_for_ooo(self)
+        
     def __str__(self):
         return f"{self.user.username}, {self.name_organization} (Поставщик)"
     
