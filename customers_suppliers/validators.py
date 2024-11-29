@@ -20,4 +20,11 @@ class CustomValidators:
         if supplier.supplier_type == 'OOO' and not supplier.kpp:
             raise ValidationError('Поле КПП обязательно для поставщиков типа "ООО".')
         
+    @staticmethod
+    def validate_kpp_for_ooo_serializer(attrs):
+        """Проверка КПП для ООО"""
+        supplier_type = attrs.get('supplier_type')
+        kpp = attrs.get('kpp')
     
+        if supplier_type == 'OOO' and not kpp:
+            raise ValidationError('Поле КПП обязательно для поставщиков типа "ООО".')
