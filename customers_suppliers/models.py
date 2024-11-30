@@ -21,7 +21,7 @@ class CustomUser (AbstractUser ):
     REQUIRED_FIELDS = ['username']
 
     def __str__(self):
-        return f"{self.username} ({self.email})"
+        return f"{self.username} ({self.email} - {self.user_type})"
 
 
 class Customer(models.Model):

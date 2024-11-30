@@ -35,6 +35,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'user_type',
                   'email', 'customer', 'supplier', 'password']
         extra_kwargs = {'password': {'write_only': True}}
+    
+    def validate(self, attrs):
+        CustomValidators.validate_user_type(attrs)
+        return attrs
         
     def create(self, validated_data):
         customer_data = validated_data.pop('customer', None)
@@ -45,12 +49,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
             user_type=validated_data['user_type']
         )
         user.set_password(validated_data['password'])
-        if validated_data['user_type'] == 'customer' and customer_data:
-            user.save()
-            customer = Customer.objects.create(user=user, **customer_data)
-        elif validated_data['user_type'] == 'supplier' and supplier_data:
-            user.save()
+        user.save()
+        if validated_data['user_type'] == 'customer':
+            Customer.objects.create(user=user, **customer_data)
+        elif validated_data['user_type'] == 'supplier':
             Supplier.objects.create(user=user, **supplier_data)
-        else:
-            raise ValidationError("Необходимо предоставить данные для создания клиента или поставщика.")
         return user
