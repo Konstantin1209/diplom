@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import CustomUser
-from .serializers import CustomUserSerializer, CustomerSerializers
+from .serializers import CustomUserSerializer, CustomerSerializers, SupplierSerializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,7 +20,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
-    serializer_class = CustomerSerializers
+    serializer_class = SupplierSerializers
 
 
 
