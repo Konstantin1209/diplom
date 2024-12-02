@@ -11,6 +11,7 @@ from .models import Customer, Supplier
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    filterset_fields = ['id', 'username', 'email', 'user_type']
     
 
 class CustomerViewSet(viewsets.ModelViewSet):
