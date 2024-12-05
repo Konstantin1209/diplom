@@ -1,6 +1,6 @@
 from django.forms import ValidationError
 from rest_framework import serializers
-
+from rest_framework.authtoken.models import Token
 from customers_suppliers.validators import CustomValidators
 from .models import CustomUser, Customer, Supplier
 
@@ -50,8 +50,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+        token, created = Token.objects.get_or_create(user=user)
         if validated_data['user_type'] == 'customer':
             Customer.objects.create(user=user, **customer_data)
         elif validated_data['user_type'] == 'supplier':
             Supplier.objects.create(user=user, **supplier_data)
         return user
+       
