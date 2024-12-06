@@ -56,4 +56,4 @@ class CustomUserSerializer(serializers.ModelSerializer):
         elif validated_data['user_type'] == 'supplier':
             Supplier.objects.create(user=user, **supplier_data)
         return user
-       
+    
