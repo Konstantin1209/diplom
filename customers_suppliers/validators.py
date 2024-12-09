@@ -43,9 +43,9 @@ class CustomValidators:
             raise serializers.ValidationError("user_type должен быть 'customer' или 'supplier'")
         if user_type == 'customer':
             if 'customer' not in attrs:
-                raise serializers.ValidationError("Необходимо предоставить данные для создания клиента.")
+                raise serializers.ValidationError("Необходимо предоставить данные для создания покупателя.")
             if 'supplier' in attrs:
-                raise serializers.ValidationError("Данные поставщика не могут быть предоставлены для клиента.")
+                raise serializers.ValidationError("Данные поставщика не могут быть предоставлены для покупателя.")
         if user_type == 'supplier':
             if 'supplier' not in attrs:
                 raise serializers.ValidationError("Необходимо предоставить данные для создания поставщика.")
