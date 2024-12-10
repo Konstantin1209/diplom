@@ -47,6 +47,8 @@ class Supplier(models.Model):
         CustomValidators.validate_kpp_for_ooo(self)
         
     def __str__(self):
-        return f"{self.user.username}, {self.name_organization} (Поставщик)"
+        if not self.name_organization:
+            return f"ИП {self.user.username} (Поставщик)"
+        return f"{self.name_organization} (Поставщик)"
     
     
