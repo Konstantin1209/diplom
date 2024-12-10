@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'django_filters',
     'rest_framework.authtoken',
+    'order',
 ]
 
 MIDDLEWARE = [
