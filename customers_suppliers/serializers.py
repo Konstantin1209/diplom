@@ -75,7 +75,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
                     instance.save()
                     customer_serializer.save()
                 except ValidationError as e:
-                    raise ValidationError({"supplier": e.detail})
+                    raise ValidationError({"customer": e.detail})
             else:
                 raise ValidationError("Пользователь не является покупателем, поэтому данные покупателя не могут быть обновлены.")
 
