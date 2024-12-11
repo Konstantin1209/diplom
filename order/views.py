@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from order.models import Category, Product, ProductInfo
-from order.serializers import CategorySerializer, ProductInfoSerializer, ProductSerializer
+from order.models import Category, Parameter, Product, ProductInfo, ProductParameter
+from order.serializers import CategorySerializer, ParameterSerializer, ProductInfoSerializer, ProductParameterSerializer, ProductSerializer
 
 
 
@@ -22,3 +22,15 @@ class ProductInfoViewSet(viewsets.ModelViewSet):
     queryset = ProductInfo.objects.all()
     serializer_class = ProductInfoSerializer
     filterset_fields = ['id', 'model', 'external_id', 'product', 'shop', 'quantity', 'price', 'price_rrc']
+
+
+class ParameterViewSet(viewsets.ModelViewSet):
+    queryset = Parameter.objects.all()
+    serializer_class = ParameterSerializer
+    filterset_fields = ['id', 'name']
+    
+
+class ProductParameterViewSet(viewsets.ModelViewSet):
+    queryset = ProductParameter.objects.all()
+    serializer_class = ProductParameterSerializer
+    filterset_fields = ['id', 'product_info', 'parameter', 'value']

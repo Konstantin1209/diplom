@@ -19,6 +19,16 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductInfo
-        fields = ['model', 'external_id', 'product', 'shop', 'quantity', 'price', 'price_rrc']
+        fields = ['id', 'model', 'external_id', 'product', 'shop', 'quantity', 'price', 'price_rrc']
+        
+        
+class ParameterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Parameter
+        fields = ['id', 'name']        
 
 
+class ProductParameterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductParameter
+        fields = ['id', 'product_info', 'parameter', 'value']
