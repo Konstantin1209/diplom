@@ -20,10 +20,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         if self.request.user.is_staff:
             return [AllowAny()]
         if self.action == 'create':
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     
     def list(self, request, *args, **kwargs):
         if self.request.user.is_staff:
@@ -38,7 +37,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         if self.request.user.is_staff:
             if user_id:
                 try:
-                    user = CustomUser .objects.get(id=user_id)
+                    user = CustomUser.objects.get(id=user_id)
                     serializer = self.get_serializer(user)
                     return Response(serializer.data)
                 except CustomUser.DoesNotExist:
