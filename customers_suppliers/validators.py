@@ -53,6 +53,7 @@ class CustomValidators:
                 raise serializers.ValidationError("Данные клиента не могут быть предоставлены для поставщика.")
         
         return attrs
+    
                 
                 
                 

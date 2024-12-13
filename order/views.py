@@ -1,10 +1,12 @@
-import json
-from django.shortcuts import render
+from django.db import IntegrityError
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
+from customers_suppliers import serializers
 from customers_suppliers.models import Supplier
 from order.models import Category, Parameter, Product, ProductInfo, ProductParameter
-from order.serializers import CategorySerializer, ParameterSerializer, ProductInfoSerializer, ProductParameterSerializer, ProductSerializer
+from order.serializers import CategorySerializer, ParameterSerializer, ProductInfoCreateSerializer, ProductInfoSerializer, ProductParameterSerializer, ProductSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser 
 import logging
 
@@ -18,18 +20,16 @@ from rest_framework.exceptions import PermissionDenied
 
 
 class PerrmissionMixin:
-    
+       
     def allowed_actions_permission(self, allowed_actions=None):
         if allowed_actions is None:
             allowed_actions = ['list', 'retrieve']
-        # logging.info("Allowed actions: %s", allowed_actions)
         return allowed_actions
     
     def check_user_type_mixin(self, user_type):
         if self.request.user.is_authenticated:
             if self.request.user.user_type == user_type:
                     return True
-                
         return False
     
     def check_admin_mixin(self):
@@ -40,8 +40,13 @@ class PerrmissionMixin:
     def check_creator_mixin(self, product_id):
         if self.request.user.is_authenticated:
             product_info_instance = ProductInfo.objects.get(id=product_id)
-            supplier = product_info_instance.shop
-            if supplier.user == self.request.user:
+            shop = product_info_instance.shop
+            supplier_user = shop.user
+            user_id = supplier_user.id
+            logging.info(f' Магазин: {shop.id}')
+            logging.info(f'Пользователь: {user_id}')
+            logging.info(f' id создателя: {supplier_user.id}, id пользователя: {self.request.user.id}')
+            if supplier_user.id == self.request.user.id:
                 return True
         else:
             return False
@@ -62,81 +67,6 @@ class PerrmissionMixin:
             return [AllowAny()]
         logging.info(' Нет прав')
         raise PermissionDenied("Нет прав.")
-    
-    
-    
-    
-        
-    
-# try:
-#     product_info_instance = ProductInfo.objects.get(id=product_id)  # Получаем объект по id
-#     supplier = product_info_instance.shop  # Получаем связанный объект Supplier
-
-#     if supplier.user == request.user:  # Проверяем, является ли текущий пользователь владельцем магазина
-#         logging.info("Вы являетесь создателем этого объекта ProductInfo через магазин.")
-#     else:
-#         logging.info("Вы не являетесь создателем этого объекта ProductInfo.")
-# except ProductInfo.DoesNotExist:
-#     logging.warning(f'ProductInfo с id {product_id} не найден.')             
-            
-                
-    
-    
-    
-    # def check_admin_permission(self, allowed_actions=None):
-    #     if allowed_actions is None:
-    #         allowed_actions = []
-    #     if self.request.user.is_staff:
-    #         return [AllowAny()]
-    #     if self.action in allowed_actions:
-    #         return [AllowAny()]
-    #     if self.request.user.is_authenticated:
-    #         if self.request.user.user_type == 'customer':
-    #             if self.action in allowed_actions:
-    #                 return [AllowAny()]
-    #             else:
-    #                 raise PermissionDenied("У вас нет разрешения на это действие.")
-    #         if self.request.user.user_type == 'supplier':
-    #             if self.action == 'create':
-    #                 return [AllowAny()]
-    #             product_info_id = self.kwargs.get('pk')
-    #             product_info = ProductInfo.objects.get(id=product_info_id)
-    #             if product_info.shop.owner == self.request.user:
-    #                 return [AllowAny()]     
-    #     return [IsAuthenticated()]
-    
-    # def check_admin_permission(self):
-    #     logging.info(self.request.user)
-    #     product_info_instance = ProductInfo.objects.get(id=5)
-    #     supplier = product_info_instance.shop 
-    #     logging.info(product_info_instance)
-    #     logging.info(supplier)
-    #     logging.info(supplier.user)
-        
-        
-        
-    #     if self.request.user.is_staff:
-    #         return [AllowAny()]
-    #     if self.action in self.allowed_actions_permission():
-    #         return [AllowAny()]
-    #     if self.request.user.is_authenticated:
-    #         if self.request.user.user_type == 'customer':
-    #             if self.action in self.allowed_actions_permission():
-    #                 return [AllowAny()]
-    #             else:
-    #                 raise PermissionDenied("Нет прав.")
-    #         if self.request.user.user_type == 'supplier':
-    #             if self.action == 'create':
-    #                 return [AllowAny()]
-    #             if self.shop.user == self.request.user:
-    #                 return [AllowAny()]
-    #     return [IsAuthenticated()]
-                    
-    # def allowed_actions_permission(self, allowed_actions=None):
-    #     if allowed_actions is None:
-    #         allowed_actions = ['list', 'retrieve']
-    #     logging.info("Allowed actions: %s", allowed_actions)
-    #     return allowed_actions
 
 
 class CategoryViewSet(PerrmissionMixin, viewsets.ModelViewSet):
@@ -145,11 +75,6 @@ class CategoryViewSet(PerrmissionMixin, viewsets.ModelViewSet):
     filterset_fields = ['id', 'name']
     
     def get_permissions(self):
-        logging.info(f' разрешенные методы: {self.allowed_actions_permission()}')
-        logging.info(f' Является ли покупателем: {self.check_user_type_mixin('customer')}')
-        logging.info(f' Является ли поставщиком: {self.check_user_type_mixin('supplier')}')
-        logging.info(f' Является ли админом: {self.check_admin_mixin()}')
-        logging.info(f' Кем является: {self.request.user}, метод: {self.action}')
         return self.get_permissions_mixin()
     
     
@@ -169,28 +94,59 @@ class ProductViewSet(PerrmissionMixin, viewsets.ModelViewSet):
     
 class ProductInfoViewSet(PerrmissionMixin, viewsets.ModelViewSet):
     queryset = ProductInfo.objects.all()
-    serializer_class = ProductInfoSerializer
     filterset_fields = ['id', 'model', 'external_id', 'product', 'shop', 'quantity', 'price', 'price_rrc']
+    
+    def get_serializer_class(self):
+        logging.info(self.action)
+        
+        if self.request.user.is_staff:
+            return ProductInfoSerializer 
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return ProductInfoCreateSerializer
+        return ProductInfoSerializer 
+        
 
     def get_permissions(self):
         if self.check_admin_mixin():
             return [AllowAny()]
-        if self.check_user_type_mixin('supplier'):
-            if self.check_creator_mixin(self, self.product_id):
-                return [AllowAny()]
-        if self.allowed_actions_permission():
+        if self.action in self.allowed_actions_permission():
             return [AllowAny()]
-        raise PermissionDenied("Нет прав.")
-            
-        
-        
+        if self.check_user_type_mixin('supplier'):
+            if self.action in self.allowed_actions_permission():
+                return [AllowAny()]
+            if self.action == 'create':
+                return [AllowAny()]
+            product_id = self.kwargs.get('pk')
+            if self.check_creator_mixin(product_id):
+                return [AllowAny()]
 
+        raise PermissionDenied("Нет прав.")
+    
+    def create(self, request, *args, **kwargs):
+        if self.request.user.is_staff:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)  # Сохраняем объект
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            supplier = request.user.supplier
+            serializer = ProductInfoCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(shop=supplier) 
+            serializer.save(shop=self.request.user.supplier)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except IntegrityError:
+            logging.error("IntegrityError: Дублирующая запись для ProductInfo.")
+            raise serializers.ValidationError("Эта информация о продукте уже существует для данного продукта и магазина.")
+    
 
 class ParameterViewSet(PerrmissionMixin, viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
     filterset_fields = ['id', 'name']
     
+    def get_permissions(self):
+        return self.get_permissions_mixin()
     
 
 class ProductParameterViewSet(PerrmissionMixin, viewsets.ModelViewSet):
