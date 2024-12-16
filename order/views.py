@@ -16,7 +16,9 @@ from order.serializers import (
 from rest_framework.permissions import AllowAny
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', filename='log.txt')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', filename='load_data.log')
+logger = logging.getLogger(__name__)
+
 
 class PermissionMixin:
     def allowed_actions_permission(self, allowed_actions=None):
@@ -37,22 +39,22 @@ class PermissionMixin:
     
     def get_permissions_mixin(self):
         if self.check_admin():
-            logging.info('Доступ предоставлен: пользователь является администратором.')
+            logger.info('Доступ предоставлен: пользователь является администратором.')
             return [AllowAny()]
         
         if self.check_user_type('supplier'):
-            logging.info('Доступ предоставлен: пользователь является поставщиком.')
+            logger.info('Доступ предоставлен: пользователь является поставщиком.')
             return [AllowAny()]
         
         if self.check_user_type('customer') and self.action in self.allowed_actions_permission():
-            logging.info('Доступ предоставлен: покупатель использует разрешенные методы.')
+            logger.info('Доступ предоставлен: покупатель использует разрешенные методы.')
             return [AllowAny()]
         
         if self.action in self.allowed_actions_permission():
-            logging.info('Доступ предоставлен: аноним использует разрешенные методы.')
+            logger.info('Доступ предоставлен: аноним использует разрешенные методы.')
             return [AllowAny()]
         
-        logging.warning('Доступ отклонен: у пользователя нет прав.')
+        logger.warning('Доступ отклонен: у пользователя нет прав.')
         raise PermissionDenied("Нет прав.")
 
 class CategoryViewSet(PermissionMixin, viewsets.ModelViewSet):
@@ -69,7 +71,7 @@ class ProductViewSet(PermissionMixin, viewsets.ModelViewSet):
     filterset_fields = ['id', 'name', 'category']
     
     def get_permissions(self):
-        logging.info(f'Пользователь {self.request.user} пытается получить доступ к действию: {self.action}')
+        logger.info(f'Пользователь {self.request.user} пытается получить доступ к действию: {self.action}')
         return self.get_permissions_mixin()
 
 class ProductInfoViewSet(PermissionMixin, viewsets.ModelViewSet):
@@ -105,7 +107,7 @@ class ProductInfoViewSet(PermissionMixin, viewsets.ModelViewSet):
                 serializer.save(shop=supplier)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except IntegrityError:
-            logging.error("IntegrityError: Дублирующая запись для Product Info.")
+            logger.error("IntegrityError: Дублирующая запись для Product Info.")
             raise serializers.ValidationError("Эта информация о продукте уже существует для данного продукта и магазина.")
     
     def update(self, request, *args, **kwargs):
@@ -116,7 +118,7 @@ class ProductInfoViewSet(PermissionMixin, viewsets.ModelViewSet):
             self.perform_update(serializer)  
             return Response(serializer.data, status=status.HTTP_200_OK)
         except IntegrityError:
-            logging.error("IntegrityError: Дублирующая запись для ProductInfo при обновлении.")
+            logger.error("IntegrityError: Дублирующая запись для ProductInfo при обновлении.")
             raise serializers.ValidationError("Эта информация о продукте уже существует для данного продукта и магазина.")
 
 class ParameterViewSet(PermissionMixin, viewsets.ModelViewSet):
@@ -133,15 +135,30 @@ class ProductParameterViewSet(PermissionMixin, viewsets.ModelViewSet):
     filterset_fields = ['id', 'product_info', 'parameter', 'value']
     
     def get_permissions(self):
-        logging.info(f"Пользователь {self.request.user} пытается получить доступ к действию: {self.action}")
+        logger.info(f"Пользователь {self.request.user} пытается получить доступ к действию: {self.action}")
+        
         if self.check_admin():
             return [AllowAny()]
+        
         if self.action in self.allowed_actions_permission():
             return [AllowAny()]
+        
         if self.check_user_type('supplier'):
-            product_info = self.request.data.get('product_info')
-            if self.check_creator(product_info):
-                logging.info("Доступ предоставлен: пользователь является создателем продукта.")
+            product_info_id = self.request.data.get('product_info')
+            
+            if product_info_id is None:
+                logger.warning("product_info не передан в запросе.")
+                raise PermissionDenied("Нет прав.")
+            
+            try:
+                product_info = ProductInfo.objects.get(id=product_info_id)
+            except ProductInfo.DoesNotExist:
+                logger.error(f"ProductInfo с ID {product_info_id} не найден.")
+                raise PermissionDenied("ProductInfo не найден.")
+            
+            if self.check_creator(product_info.id):
+                logger.info("Доступ предоставлен: пользователь является создателем продукта.")
                 return [AllowAny()]
-        logging.warning(f"Доступ отклонен: у пользователя {self.request.user} нет прав для действия '{self.action}'.")
+        
+        logger.warning(f"Доступ отклонен: у пользователя {self.request.user} нет прав для действия '{self.action}'.")
         raise PermissionDenied("Нет прав.")
