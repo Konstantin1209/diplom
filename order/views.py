@@ -126,7 +126,7 @@ class ProductInfoViewSet(PerrmissionMixin, viewsets.ModelViewSet):
         if self.request.user.is_staff:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)  # Сохраняем объект
+            self.perform_create(serializer) 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         try:
             supplier = request.user.supplier
@@ -139,6 +139,17 @@ class ProductInfoViewSet(PerrmissionMixin, viewsets.ModelViewSet):
             logging.error("IntegrityError: Дублирующая запись для ProductInfo.")
             raise serializers.ValidationError("Эта информация о продукте уже существует для данного продукта и магазина.")
     
+    def update(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()  
+            serializer = ProductInfoCreateSerializer(instance, data=request.data, partial=True)  
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)  
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except IntegrityError:
+            logging.error("IntegrityError: Дублирующая запись для ProductInfo при обновлении.")
+            raise serializers.ValidationError("Эта информация о продукте уже существует для данного продукта и магазина.")
+
 
 class ParameterViewSet(PerrmissionMixin, viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
@@ -153,4 +164,27 @@ class ProductParameterViewSet(PerrmissionMixin, viewsets.ModelViewSet):
     queryset = ProductParameter.objects.all()
     serializer_class = ProductParameterSerializer
     filterset_fields = ['id', 'product_info', 'parameter', 'value']
+    
+    def get_permissions(self):
+        logging.info(f"Пользователь {self.request.user} пытается получить доступ к действию: {self.action}")
+
+        if self.check_admin_mixin():
+            logging.info("Доступ предоставлен: пользователь является администратором.")
+            return [AllowAny()]
+
+        if self.action in self.allowed_actions_permission():
+            logging.info(f"Доступ предоставлен: действие '{self.action}' разрешено.")
+            return [AllowAny()]
+
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            if self.check_user_type_mixin('supplier'):
+                product_info = self.request.data.get('product_info')
+                if self.check_creator_mixin(product_info):
+                    logging.info("Доступ предоставлен: пользователь является создателем продукта.")
+                    return [AllowAny()]
+
+        logging.warning(f"Доступ отклонен: у пользователя {self.request.user} нет прав для действия '{self.action}'.")
+        raise PermissionDenied("Нет прав.")
+            
+
     
