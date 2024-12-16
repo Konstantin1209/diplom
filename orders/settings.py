@@ -160,3 +160,28 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,  # Отключаем существующие логгеры
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'load_data.log',
+            'encoding': 'utf-8',  # Поддержка UTF-8
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',  # Обработчик для вывода в консоль
+        },
+    },
+    'loggers': {
+        'order': {  # Замените на имя вашего приложения
+            'handlers': ['file', 'console'],  # Добавляем оба обработчика
+            'level': 'DEBUG',
+            'propagate': False,  # Не передаем сообщения выше по иерархии
+        },
+    },
+}

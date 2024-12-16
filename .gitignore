@@ -7,3 +7,4 @@ env/
 .idea/
 */migrations/*
 *requests.http
+*load_data.log

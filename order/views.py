@@ -18,7 +18,7 @@ from rest_framework.permissions import AllowAny
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', filename='load_data.log')
 logger = logging.getLogger(__name__)
-
+logger.info("Логирование инициализировано.")
 
 class PermissionMixin:
     def allowed_actions_permission(self, allowed_actions=None):
