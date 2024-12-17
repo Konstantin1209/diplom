@@ -165,16 +165,24 @@ REST_FRAMEWORK = {
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,  # Отключаем существующие логгеры
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения с временными метками
+            'datefmt': '%Y-%m-%d %H:%M:%S',  # Формат времени
+        },
+    },
     'handlers': {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': 'load_data.log',
             'encoding': 'utf-8',  # Поддержка UTF-8
+            'formatter': 'verbose',  # Используем форматтер
         },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',  # Обработчик для вывода в консоль
+            'formatter': 'verbose',  # Используем форматтер
         },
     },
     'loggers': {

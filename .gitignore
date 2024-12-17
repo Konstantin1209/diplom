@@ -8,3 +8,4 @@ env/
 */migrations/*
 *requests.http
 *load_data.log
+*client.py
