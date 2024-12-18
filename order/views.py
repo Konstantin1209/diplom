@@ -193,69 +193,87 @@ class ProductParameterViewSet(PermissionMixin, viewsets.ModelViewSet):
         raise PermissionDenied("Нет прав.")
     
     
-
-
-class UploadFileView(APIView):
+class UploadFileView(PermissionMixin, APIView):
     def post(self, request):
+        logger.info(not self.check_admin())
+        
+        if not self.check_admin() and not self.check_user_type('supplier'):
+            logger.info('Нет прав.')
+            return PermissionDenied('Нет прав.')
+
         file = request.FILES.get('file')
         if not file:
             return Response({"error": "Файл не найден"}, status=status.HTTP_400_BAD_REQUEST)
 
+        logger.info('Файл найден')
         try:
             data = yaml.safe_load(file.read())
-            # Обработка категорий
-            for category_data in data.get('categories', []):
-                category = Category.objects.filter(id=category_data['id']).first()
-                if category is None:
-                    category, created = Category.objects.get_or_create(
-                        id=category_data['id'], 
-                        defaults={'name': category_data['name']}
-                    )
-                    logger.info(f'Создана новая категория : {category}.')
-                else:
-                    logger.info(f'Эта категория уже существует : {category}.')
+            self.process_categories(data.get('categories', []))
+            shop_id = data.get('shop', [{}])[0].get('id')
+            logger.info(f'магазин из файла : {shop_id}')
 
-            # Обработка товаров
-            shop_id = data.get('shop', [{}])[0].get('id')  # Получаем ID магазина из файла
-            shop = Supplier.objects.filter(id=shop_id).first()  # Получаем объект магазина
-            logger.info(f'магазин из файла : {shop_id}, магазин из базы данных : {shop.id}, магазин из запроса : {self.request.user.supplier.id}')
-            if shop.id != self.request.user.supplier.id:
-                logger.info('Нет прав')
-                raise PermissionDenied(f'Нет прав')
-            if not shop:
-                logger.info(f'Shop id {shop_id} не найден.')
-                return Response({"error": f"Shop id {shop_id} не найден."}, status=status.HTTP_400_BAD_REQUEST)
-
-            for product_data in data.get('goods', []):
-                try:
-                    category = Category.objects.get(id=product_data['category'])
-                    logger.info(f'Категория товара : {category} существует')
-                except Category.DoesNotExist:
-                    logger.info(f"Категория с ID {product_data['category']} не существует.")
-                    return Response({"error": f"Категория с ID {product_data['category']} не существует."}, status=status.HTTP_400_BAD_REQUEST)
-                product, created = Product.objects.get_or_create(name=product_data['name'], category=category)
-
-                # Обработка информации о продукте
-                product_info = ProductInfo.objects.create(
-                    model=product_data['model'],
-                    external_id=product_data['id'],
-                    product=product,
-                    shop=shop,  
-                    quantity=product_data['quantity'],
-                    price=product_data['price'],
-                    price_rrc=product_data['price_rrc']
-                )
-                logger.info(f'Создана новая информация о продукте : {product_info}')
-                # Обработка параметров
-                for param_name, param_value in product_data.get('parameters', {}).items():
-                    parameter, created = Parameter.objects.get_or_create(name=param_name)
-                    ProductParameter.objects.create(
-                        product_info=product_info,
-                        parameter=parameter,
-                        value=param_value
-                    )
-
-            return Response({"message": "Файл успешно обработан."}, status=status.HTTP_201_CREATED)
+            if self.check_admin() or self.is_supplier_authorized(shop_id):
+                self.process_products(data.get('goods', []), shop_id)
+                return Response({"message": "Файл успешно обработан."}, status=status.HTTP_201_CREATED)
+            else:
+                logger.info('Нет прав для доступа к этому магазину.')
+                return Response({"error": "Нет прав для доступа к этому магазину."}, status=status.HTTP_403_FORBIDDEN)
 
         except Exception as e:
+            logger.error({"error": str(e)})
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def process_categories(self, categories):
+        for category_data in categories:
+            category, created = Category.objects.get_or_create(
+                id=category_data['id'], 
+                defaults={'name': category_data['name']}
+            )
+            if created:
+                logger.info(f'Создана новая категория : {category}.')
+            else:
+                logger.info(f'Эта категория уже существует : {category}.')
+
+    def is_supplier_authorized(self, shop_id):
+        shop = Supplier.objects.filter(id=shop_id).first()
+        if shop and shop.id == self.request.user.supplier.id:
+            return True
+        return False
+
+    def process_products(self, goods, shop_id):
+        shop = Supplier.objects.filter(id=shop_id).first()
+        if not shop:
+            logger.info(f'Shop id {shop_id} не найден.')
+            raise ValueError(f"Shop id {shop_id} не найден.")
+
+        for product_data in goods:
+            category = self.get_category(product_data['category'])
+            product, created = Product.objects.get_or_create(name=product_data['name'], category=category)
+
+            product_info = ProductInfo.objects.create(
+                model=product_data['model'],
+                external_id=product_data['id'],
+                product=product,
+                shop=shop,  
+                quantity=product_data['quantity'],
+                price=product_data['price'],
+                price_rrc=product_data['price_rrc']
+            )
+            logger.info(f'Создана новая информация о продукте : {product_info}')
+            self.process_product_parameters(product_info, product_data.get('parameters', {}))
+
+    def get_category(self, category_id):
+        try:
+            return Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            logger.info(f"Категория с ID {category_id} не существует.")
+            raise ValueError(f"Категория с ID {category_id} не существует.")
+
+    def process_product_parameters(self, product_info, parameters):
+        for param_name, param_value in parameters.items():
+            parameter, created = Parameter.objects.get_or_create(name=param_name)
+            ProductParameter.objects.create(
+                product_info=product_info,
+                parameter=parameter,
+                value=param_value
+            )

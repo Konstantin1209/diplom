@@ -9,3 +9,5 @@ env/
 *requests.http
 *load_data.log
 *client.py
+client.py
+load_data.log

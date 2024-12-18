@@ -1,5 +1,5 @@
 shop: 
-  - id: 3
+  - id: 2
 categories:
   - id: 226
     name: Смартфоны
@@ -11,7 +11,7 @@ categories:
     name: Телевизоры
 
 goods:
-  - id: 544890
+  - id: 54854
     category: 19
     model: apple/iphone/xs-max
     name: Смартфон Apple iPhone XS Max 512GB (золотистый)
