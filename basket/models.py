@@ -31,6 +31,6 @@ class CartItem(models.Model):
         ]
         
     def __str__(self):
-        return f"{self.product_info.product.name} - {self.quantity} шт."
+        return f"{self.cart}: {self.product_info.product.name} - {self.quantity} шт."
 
     
