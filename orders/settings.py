@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework.authtoken',
     'order',
+    'basket',
 ]
 
 MIDDLEWARE = [
@@ -186,6 +187,12 @@ LOGGING = {
         },
     },
     'loggers': {
+        'basket': {  # Замените на имя вашего приложения
+            'handlers': ['file', 'console'],  # Добавляем оба обработчика
+            'level': 'DEBUG',
+            'propagate': False,  # Не передаем сообщения выше по иерархии
+        },
+        
         'order': {  # Замените на имя вашего приложения
             'handlers': ['file', 'console'],  # Добавляем оба обработчика
             'level': 'DEBUG',
