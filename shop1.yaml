@@ -1,13 +1,13 @@
 shop: 
-  - id: 2
+  - id: 1
 categories:
-  - id: 226
+  - id: 224
     name: Смартфоны
-  - id: 19
+  - id: 15
     name: Аксессуары
-  - id: 4
+  - id: 1
     name: Flash-накопители
-  - id: 8
+  - id: 5
     name: Телевизоры
 
 goods:
