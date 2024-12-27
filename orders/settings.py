@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'django_filters',
     'rest_framework.authtoken',
-    'order',
+    'products',
     'basket',
 ]
 
@@ -194,7 +194,7 @@ LOGGING = {
             'propagate': False,  # Не передаем сообщения выше по иерархии
         },
         
-        'order': {  # Замените на имя вашего приложения
+        'products': {  # Замените на имя вашего приложения
             'handlers': ['file', 'console'],  # Добавляем оба обработчика
             'level': 'DEBUG',
             'propagate': False,  # Не передаем сообщения выше по иерархии

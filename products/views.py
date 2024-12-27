@@ -7,8 +7,8 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 import yaml
 from customers_suppliers import serializers
 from customers_suppliers.models import Supplier
-from order.models import Category, Parameter, Product, ProductInfo, ProductParameter
-from order.serializers import (
+from products.models import Category, Parameter, Product, ProductInfo, ProductParameter
+from products.serializers import (
     CategorySerializer, 
     ParameterSerializer, 
     ProductInfoCreateSerializer, 

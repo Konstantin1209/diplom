@@ -1,7 +1,7 @@
 import logging
 from django.core.management.base import BaseCommand
 import yaml
-from order.models import Category, Product, ProductInfo, Parameter, ProductParameter
+from products.models import Category, Product, ProductInfo, Parameter, ProductParameter
 from customers_suppliers.models import Supplier
 
 # Настройка логирования
