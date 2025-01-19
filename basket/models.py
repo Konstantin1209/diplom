@@ -50,6 +50,27 @@ class Cart(models.Model):
         cart_product.quantity = quantity
         cart_product.save()
         return self.update_total_amount()
+    
+    def confirm_order(self):
+        if self.cart_type == 'collecting order':
+            self.cart_type = 'waiting for confirmation'
+            self.save()
+            return True
+        return False
+
+    def cancel_order(self):
+        if self.cart_type in ['collecting order', 'waiting for confirmation']:
+            self.cart_type = 'cancelled'
+            self.save()
+            return True
+        return False
+
+    def confirm_payment(self):
+        if self.cart_type == 'waiting for confirmation':
+            self.cart_type = 'confirmed'
+            self.save()
+            return True
+        return False
 
 
 class CartProduct(models.Model):
