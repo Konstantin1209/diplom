@@ -18,11 +18,11 @@ from .views import (
 )
 
 router = DefaultRouter()
-
+app_name = 'basket' 
 urlpatterns = [
-    path('api/v1/carts/', GetCartsView.as_view()),
-    path('api/v1/carts/create/', CreateCartView.as_view()),
-    path('api/v1/carts/<pk>/', GetCartView.as_view()),
+    path('api/v1/carts/', GetCartsView.as_view(), name='get-carts'),
+    path('api/v1/carts/create/', CreateCartView.as_view(), name='create-cart'),
+    path('api/v1/carts/<pk>/', GetCartView.as_view(), name='get-cart'),
     path('api/v1/carts/<pk>/update/', UpdateCartView.as_view()),
     path('api/v1/carts/<pk>/delete/', DeleteCartView.as_view()),
     path('api/v1/cart-products/', CreateCartProductView.as_view()),

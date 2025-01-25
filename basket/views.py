@@ -60,9 +60,9 @@ class CreateCartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = CartSerializer(data=request.data)
+        serializer = CartSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save(customer=request.user)
+            serializer.save() 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,7 +72,7 @@ class GetCartView(APIView):
     def get(self, request, pk):
         try:
             cart = Cart.objects.get(pk=pk)
-            if request.user.is_staff or cart.customer == request.user:
+            if request.user.is_staff or cart.customer == request.user.customer:  
                 serializer = CartSerializer(cart)
                 return Response(serializer.data)
             return Response(status=status.HTTP_403_FORBIDDEN)

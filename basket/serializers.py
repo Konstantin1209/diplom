@@ -28,9 +28,10 @@ class CartSerializer(serializers.ModelSerializer):
             return None
     
     def create(self, validated_data):
-        customer = validated_data.get('customer')
+        customer = self.context['request'].user.customer 
         if Cart.objects.filter(customer=customer).exists():
             raise serializers.ValidationError("У этого покупателя уже есть корзина")
+        validated_data['customer'] = customer 
         return super().create(validated_data)
     
         
