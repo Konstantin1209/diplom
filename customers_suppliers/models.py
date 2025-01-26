@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, User
 from django.db import models
 from .validators import CustomValidators
+from easy_thumbnails.fields import ThumbnailerImageField
 
 
 USER_TYPE_CHOICES = [
@@ -16,6 +17,7 @@ SUPPLIER_TYPE_CHOICES = [
 class CustomUser (AbstractUser ):
     email = models.EmailField(unique=True, blank=False, null=False)
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='customer')
+    avatar = ThumbnailerImageField(upload_to='avatars/', blank=True, null=True)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

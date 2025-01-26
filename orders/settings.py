@@ -53,8 +53,28 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'products',
     'basket',
-    'drf_spectacular'
+    'drf_spectacular',
+    'django.contrib.sites',  
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google', 
+    'allauth.socialaccount.providers.facebook',
+    'baton',
+    'easy_thumbnails',
 ]
+
+SITE_ID = 1
+
+THUMBNAIL_ALIASES = {
+    'default': {
+        'small': {'size': (100, 100), 'crop': True},
+        'medium': {'size': (300, 300), 'crop': True},
+        'large': {'size': (600, 600), 'crop': True},
+    },
+}
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,7 +85,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    # 'basket.middleware.CartMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'orders.urls'
@@ -100,7 +120,8 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
         'PORT': os.getenv('POSTGRES_PORT', '5431'),
-    }
+
+}
 }
 
 
@@ -163,6 +184,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+            'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',  # Ограничение для анонимных пользователей
+        'user': '1000/day',  # Ограничение для зарегистрированных пользователей
+    },
 }
 
 
