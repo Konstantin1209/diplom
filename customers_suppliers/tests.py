@@ -1,3 +1,4 @@
+import time
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
@@ -123,7 +124,17 @@ class CustomUserViewSetTests(APITestCase):
         self.assertIsNone(supplier.name_organization) # Проверяем, что name_organization пустое (None) или отсутствует
 
 
+    def test_response_time_without_cache(self):
+        start_time = time.time()
+        data = CustomUser.objects.all()  # Запрос к модели Customer
+        response_time = time.time() - start_time
+        print("Время отклика без кэширования:", response_time)
 
+    def test_response_time_with_cache(self):
+        start_time = time.time()
+        data = CustomUser.objects.all()  # Запрос к модели Customer
+        response_time = time.time() - start_time
+        print("Время отклика с кэшированием:", response_time)
 
         
 

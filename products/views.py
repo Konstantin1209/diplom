@@ -277,3 +277,8 @@ class UploadFileView(PermissionMixin, APIView):
                 parameter=parameter,
                 value=param_value
             )
+            
+            
+class TestErrorView(APIView):
+    def get(self, request):
+        raise Exception("This is a test exception for Rollbar!")

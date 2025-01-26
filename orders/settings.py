@@ -13,9 +13,16 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import rollbar
+import rollbar.contrib.django
 
 
 
+ROLLBAR_ACCESS_TOKEN = ''  # Оставляем пустым для возможности вставки токена позже
+rollbar.init(
+    access_token=ROLLBAR_ACCESS_TOKEN,
+    environment='development',  # или 'production' в зависимости от среды
+)
 INTERNAL_IPS = [
     '127.0.0.1'
 ]
@@ -86,6 +93,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
 ]
 
 ROOT_URLCONF = 'orders.urls'
@@ -239,4 +247,11 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
+}
+
+CACHALOT_ENABLED = True
+CACHALOT_REDIS = {
+    'host': 'localhost',
+    'port': 6379,
+    'db': 0,
 }
